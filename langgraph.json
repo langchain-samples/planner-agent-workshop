@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "agent": "./agents/agent_09_long_term_memory.py:agent"
+  },
+  "env": ".env"
+}
+
