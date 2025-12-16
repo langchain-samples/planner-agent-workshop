@@ -4,8 +4,9 @@ A progressive workshop showcasing LangChain v1 capabilities, building from a sim
 
 ## Workshop Structure
 
-This workshop consists of 9 progressive steps, each building upon the previous:
+This workshop consists of 12 progressive steps, each building upon the previous:
 
+### Part 1: LangChain v1 Core Features (Steps 1-9)
 1. **agent_01_basic.py** - Basic calendar agent with tools
 2. **agent_02_memory.py** - Adds conversational memory with MemorySaver
 3. **agent_03_human_in_loop_interrupt.py** - Human-in-the-loop with interrupt pattern
@@ -15,6 +16,11 @@ This workshop consists of 9 progressive steps, each building upon the previous:
 7. **agent_07_guardrail_middleware.py** - Custom middleware for security guardrails
 8. **agent_08_image_handling.py** - Image analysis with custom middleware
 9. **agent_09_long_term_memory.py** - Long-term memory with Store
+
+### Part 2: Deep Agents (Steps 10-12)
+10. **agent_10_intro_deep_agents.py** - Introduction to Deep Agents with built-in capabilities
+11. **agent_11_deep_agents_subagents.py** - Adding specialized subagents to deep agents
+12. **agent_12_deep_agents_middleware.py** - Custom middleware with deep agents
 
 ## Setup
 
@@ -110,6 +116,24 @@ python agents/agent_01_basic.py
 - User data persists across conversations/threads
 - Distinguishes short-term (checkpointer) vs long-term (store) memory
 
+### Step 10: Introduction to Deep Agents
+- Introduces `create_deep_agent` from the `deepagents` package
+- Built-in capabilities: planning (write_todos), file system tools, subagents
+- Automatic context management with file eviction and summarization
+- Shows the difference between regular agents and deep agents
+
+### Step 11: Deep Agents with Subagents
+- Demonstrates built-in subagent capabilities
+- Define specialized subagents with custom tools and prompts
+- Use the `task` tool for delegation and context isolation
+- Compare with manual supervisor pattern (agent_06)
+
+### Step 12: Deep Agents with Custom Middleware
+- Shows how to add custom middleware to deep agents
+- Deep agents come with TodoListMiddleware, FilesystemMiddleware, and SubAgentMiddleware
+- Add HumanInTheLoopMiddleware via `interrupt_on` parameter
+- Integrate custom middleware like SecurityGuardrailMiddleware
+
 ## Deployment
 
 The `langgraph.json` file is configured for deployment to LangSmith. The final agent (agent_09_long_term_memory.py) is set as the main graph.
@@ -122,6 +146,7 @@ To deploy:
 
 ## Key Concepts Demonstrated
 
+### LangChain v1 Core (Steps 1-9)
 - **Agents**: Basic agent creation with `create_agent`
 - **Tools**: Creating and using tools with `@tool` decorator
 - **Memory**: Short-term (checkpointer) and long-term (store) memory
@@ -132,6 +157,15 @@ To deploy:
 - **Multi-Agent**: Supervisor pattern with sub-agents as tools
 - **Security**: Guardrails and request filtering
 - **Content Blocks**: Image handling and analysis
+
+### Deep Agents (Steps 10-12)
+- **Deep Agents**: Agent harness with built-in planning, file system, and subagents
+- **Planning**: Automatic task decomposition with `write_todos` tool
+- **File System**: Built-in tools for context management (ls, read_file, write_file, edit_file)
+- **Subagents**: Built-in task delegation with specialized subagents
+- **Context Management**: Automatic eviction of large tool results and conversation summarization
+- **Backends**: Pluggable storage (StateBackend, FilesystemBackend, StoreBackend, CompositeBackend)
+- **Middleware Composition**: Combining built-in and custom middleware
 
 ## Advanced Patterns
 
@@ -152,3 +186,20 @@ See:
 - Agent 05+ require TAVILY_API_KEY for MCP web search integration
 - Image handling (agent 08) requires vision-capable models
 - Long-term memory (agent 09) uses InMemoryStore (use DB-backed store in production)
+- Deep agents (agent 10-12) require the `deepagents` package (already in pyproject.toml)
+
+## Deep Agents vs Regular Agents
+
+**When to use Deep Agents:**
+- Complex, multi-step tasks requiring planning
+- Large context management needs
+- Tasks benefiting from subagent delegation
+- Long-running research or analysis tasks
+
+**When to use Regular Agents:**
+- Simple, single-purpose agents
+- Direct tool-calling patterns
+- Fine-grained control over execution
+- Lightweight applications
+
+Deep agents build on top of LangGraph and include middleware for planning, file systems, and subagents out of the box. Regular agents (`create_agent`) provide the basic agent loop and require manual setup for advanced features.
