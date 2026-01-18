@@ -5,13 +5,12 @@ Demonstrates human-in-the-loop pattern for conflict resolution.
 """
 
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import interrupt, Command
 from typing import List, Dict
-
 from dotenv import load_dotenv
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -20,7 +19,7 @@ load_dotenv(override=True)
 _calendar_events: List[Dict] = [
     {
         "title": "Meeting",
-        "date": "2024-12-20",
+        "date": "2026-12-20",
         "time": "11:00",
         "location": "Office"
     }
@@ -96,9 +95,6 @@ def ask_for_help(message: str) -> str:
     return user_input
 
 
-# Initialize the model
-model = init_chat_model("gpt-4o-mini", temperature=0)
-
 # System prompt
 SYSTEM_PROMPT = """You are a helpful calendar assistant. You can:
 - Read calendar events using read_calendar
@@ -117,44 +113,44 @@ agent = create_agent(
     model=model,
     tools=[read_calendar, write_calendar, ask_for_help],
     system_prompt=SYSTEM_PROMPT,
-    checkpointer=checkpointer,
+    # checkpointer=checkpointer,
 )
 
-if __name__ == "__main__":
-    # Example usage
-    print("=== Agent with Human-in-the-Loop (Interrupt) ===\n")
+# if __name__ == "__main__":
+#     # Example usage
+#     print("=== Agent with Human-in-the-Loop (Interrupt) ===\n")
     
-    thread_id = "conversation-1"
-    config = {"configurable": {"thread_id": thread_id}}
+#     thread_id = "conversation-1"
+#     config = {"configurable": {"thread_id": thread_id}}
     
-    # Note: Calendar already has an event on December 20th at 11 AM
-    print("Calendar already has an event: Meeting on December 20th at 11 AM\n")
+#     # Note: Calendar already has an event on December 20th at 11 AM
+#     print("Calendar already has an event: Meeting on December 20th at 11 AM\n")
     
-    # Try to schedule another event at the same time (will trigger conflict and interrupt)
-    print("User: Schedule a soccer game on December 20th at 11 AM in Seoul")
-    print("(This will trigger a conflict and the agent will ask for help via interrupt)\n")
+#     # Try to schedule another event at the same time (will trigger conflict and interrupt)
+#     print("User: Schedule a soccer game on December 20th at 11 AM in Paris")
+#     print("(This will trigger a conflict and the agent will ask for help via interrupt)\n")
     
-    # First invocation - this will trigger the interrupt when ask_for_help is called
-    result = agent.invoke({
-        "messages": [{"role": "user", "content": "Schedule a soccer game on December 20th at 11 AM in Seoul"}]
-    }, config=config)
+#     # First invocation - this will trigger the interrupt when ask_for_help is called
+#     result = agent.invoke({
+#         "messages": [{"role": "user", "content": "Schedule a soccer game on December 20th 2026 at 11 AM in Paris"}]
+#     }, config=config)
     
-    # Check if the agent is interrupted (waiting for user input)
-    if "__interrupt__" in result:
-        print("Agent interrupted and waiting for user input...")
-        print(f"Interrupt message: {result.get('__interrupt__', 'N/A')}\n")
-    else:
-        # If no interrupt field, the interrupt() call paused execution
-        print("Agent execution paused (interrupted)...\n")
+#     # Check if the agent is interrupted (waiting for user input)
+#     if "__interrupt__" in result:
+#         print("Agent interrupted and waiting for user input...")
+#         print(f"Interrupt message: {result.get('__interrupt__', 'N/A')}\n")
+#     else:
+#         # If no interrupt field, the interrupt() call paused execution
+#         print("Agent execution paused (interrupted)...\n")
     
-    print("Resuming with user input: 'I have moved my existing event'\n")
+#     print("Resuming with user input: 'I have moved my existing event'\n")
     
-    # Second invocation - resume the agent with user input using Command
-    # The value passed to resume becomes the return value of interrupt()
-    result = agent.invoke(
-        Command(resume="I have moved my existing event"),
-        config=config
-    )
-    print(f"Agent: {result['messages'][-1].content}\n")
-    print("Note: The agent successfully resumed after the interrupt and completed the task!")
+#     # Second invocation - resume the agent with user input using Command
+#     # The value passed to resume becomes the return value of interrupt()
+#     result = agent.invoke(
+#         Command(resume="I have moved my existing event"),
+#         config=config
+#     )
+#     print(f"Agent: {result['messages'][-1].content}\n")
+#     print("Note: The agent successfully resumed after the interrupt and completed the task!")
 

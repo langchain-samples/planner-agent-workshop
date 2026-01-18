@@ -5,13 +5,13 @@ Demonstrates prebuilt middleware for human-in-the-loop tool confirmation.
 """
 
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langchain.agents.middleware import HumanInTheLoopMiddleware
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.types import Command, interrupt
 from typing import List, Dict
 from dotenv import load_dotenv
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -120,9 +120,6 @@ def reschedule_calendar(old_date: str, old_time: str, new_date: str, new_time: s
     return f"No event found for {old_date} at {old_time}"
 
 
-# Initialize the model
-model = init_chat_model("gpt-4o-mini", temperature=0)
-
 # System prompt
 SYSTEM_PROMPT = """You are a helpful calendar assistant. You can:
 - Read calendar events using read_calendar
@@ -151,60 +148,60 @@ agent = create_agent(
     model=model,
     tools=[read_calendar, write_calendar, ask_for_help, reschedule_calendar],
     system_prompt=SYSTEM_PROMPT,
-    checkpointer=checkpointer,
+    # checkpointer=checkpointer,
     middleware=[human_in_loop],
 )
 
-if __name__ == "__main__":
-    # Example usage
-    print("=== Agent with Middleware for Tool Confirmation ===\n")
+# if __name__ == "__main__":
+#     # Example usage
+#     print("=== Agent with Middleware for Tool Confirmation ===\n")
     
-    thread_id = "conversation-1"
-    config = {"configurable": {"thread_id": thread_id}}
+#     thread_id = "conversation-1"
+#     config = {"configurable": {"thread_id": thread_id}}
     
-    # Note: Calendar already has an event on December 20th at 11 AM
-    print("Calendar already has an event: Meeting on December 20th at 11 AM\n")
+#     # Note: Calendar already has an event on December 20th at 11 AM
+#     print("Calendar already has an event: Meeting on December 20th at 11 AM\n")
     
-    # Try to schedule another event at the same time
-    print("User: Schedule a soccer game on December 20th at 11 AM in Seoul")
-    print("(The agent will detect conflict, ask for help, then reschedule with middleware confirmation)\n")
+#     # Try to schedule another event at the same time
+#     print("User: Schedule a soccer game on December 20th at 11 AM in Paris")
+#     print("(The agent will detect conflict, ask for help, then reschedule with middleware confirmation)\n")
     
-    # First invocation - agent detects conflict and calls ask_for_help
-    result = agent.invoke({
-        "messages": [{"role": "user", "content": "Schedule a soccer game on December 20th at 11 AM in Seoul"}]
-    }, config=config)
+#     # First invocation - agent detects conflict and calls ask_for_help
+#     result = agent.invoke({
+#         "messages": [{"role": "user", "content": "Schedule a soccer game on December 20th at 11 AM in Paris"}]
+#     }, config=config)
     
-    # Check if the agent is interrupted by ask_for_help
-    if "__interrupt__" in result:
-        print("Agent interrupted by ask_for_help - waiting for user response...")
-        print(f"Interrupt message: {result.get('__interrupt__', 'N/A')}\n")
-    else:
-        print("Agent execution paused (ask_for_help interrupt)...\n")
+#     # Check if the agent is interrupted by ask_for_help
+#     if "__interrupt__" in result:
+#         print("Agent interrupted by ask_for_help - waiting for user response...")
+#         print(f"Interrupt message: {result.get('__interrupt__', 'N/A')}\n")
+#     else:
+#         print("Agent execution paused (ask_for_help interrupt)...\n")
     
-    print("User responds: 'Yes, reschedule it for the day after at the same time'\n")
+#     print("User responds: 'Yes, reschedule it for the day after at the same time'\n")
     
-    # Second invocation - resume with user's response to ask_for_help
-    result = agent.invoke(
-        Command(resume="Yes, reschedule it for the day after at the same time"),
-        config=config
-    )
+#     # Second invocation - resume with user's response to ask_for_help
+#     result = agent.invoke(
+#         Command(resume="Yes, reschedule it for the day after at the same time"),
+#         config=config
+#     )
     
-    # Check if the agent is now interrupted by middleware before reschedule_calendar
-    if "__interrupt__" in result:
-        print("Agent interrupted by middleware - waiting for confirmation to execute reschedule_calendar...")
-        print(f"Interrupt details: {result.get('__interrupt__', 'N/A')}\n")
-    else:
-        print("Agent execution paused by middleware (waiting for tool confirmation)...\n")
+#     # Check if the agent is now interrupted by middleware before reschedule_calendar
+#     if "__interrupt__" in result:
+#         print("Agent interrupted by middleware - waiting for confirmation to execute reschedule_calendar...")
+#         print(f"Interrupt details: {result.get('__interrupt__', 'N/A')}\n")
+#     else:
+#         print("Agent execution paused by middleware (waiting for tool confirmation)...\n")
     
-    print("Resuming with approval to execute reschedule_calendar...\n")
+#     print("Resuming with approval to execute reschedule_calendar...\n")
     
-    # Third invocation - resume the agent with approval decision for reschedule_calendar
-    # The middleware expects a decision format: {"decisions": [{"type": "approve"}]}
-    result = agent.invoke(
-        Command(resume={"decisions": [{"type": "approve"}]}),
-        config=config
-    )
-    print(f"Agent: {result['messages'][-1].content}\n")
-    print("Note: The agent used ask_for_help to ask about rescheduling, then")
-    print("the HumanInTheLoopMiddleware interrupted before executing reschedule_calendar!")
+#     # Third invocation - resume the agent with approval decision for reschedule_calendar
+#     # The middleware expects a decision format: {"decisions": [{"type": "approve"}]}
+#     result = agent.invoke(
+#         Command(resume={"decisions": [{"type": "approve"}]}),
+#         config=config
+#     )
+#     print(f"Agent: {result['messages'][-1].content}\n")
+#     print("Note: The agent used ask_for_help to ask about rescheduling, then")
+#     print("the HumanInTheLoopMiddleware interrupted before executing reschedule_calendar!")
 

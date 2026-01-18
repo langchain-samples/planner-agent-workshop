@@ -5,7 +5,6 @@ Demonstrates the supervisor pattern with sub-agents as tools.
 """
 
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langchain.agents.middleware.human_in_the_loop import HumanInTheLoopMiddleware
 from langchain.agents.middleware.types import AgentMiddleware
@@ -16,6 +15,7 @@ from typing import List, Dict
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -104,7 +104,7 @@ def reschedule_calendar(old_date: str, old_time: str, new_date: str, new_time: s
 
 
 # Create calendar sub-agent with HITL middleware
-calendar_model = init_chat_model("gpt-4o-mini", temperature=0)
+# Uses the model from models.py
 calendar_checkpointer = MemorySaver()
 
 # Create middleware for tool confirmation (like agent_04)
@@ -115,7 +115,7 @@ calendar_hitl_middleware = HumanInTheLoopMiddleware(
 )
 
 calendar_agent = create_agent(
-    model=calendar_model,
+    model=model,
     tools=[read_calendar, write_calendar, ask_for_help, reschedule_calendar],
     system_prompt="""You are a calendar assistant. You can:
 - Read calendar events using read_calendar
@@ -130,7 +130,7 @@ If the user agrees to reschedule, use reschedule_calendar to move the existing e
 Do NOT just check the calendar and report conflicts - actually TRY to schedule the event using write_calendar.
 The write_calendar tool will tell you if there's a conflict.
 Be friendly and confirm when events are successfully created or rescheduled.""",
-    checkpointer=calendar_checkpointer,
+    # checkpointer=calendar_checkpointer,
     middleware=[calendar_hitl_middleware],
 )
 
@@ -143,8 +143,8 @@ def tavily_search(query: str) -> str:
     return f"""Search results for "{query}":
 
 1. Swan Lake Ballet - {tomorrow_date} at 18:00 (6PM)
-   Description: Classical ballet performance by Seoul Ballet Company
-   Location: Seoul Arts Center
+   Description: Classical ballet performance by Paris Ballet Company
+   Location: Paris Arts Center
    URL: https://example.com/ballet-swan-lake
 
 2. Modern Dance Show - {tomorrow_date} at 19:00 (7PM)
@@ -155,9 +155,9 @@ def tavily_search(query: str) -> str:
 
 
 # Create web search sub-agent
-search_model = init_chat_model("gpt-4o-mini", temperature=0)
+# Uses the model from models.py
 search_agent = create_agent(
-    model=search_model,
+    model=model,
     tools=[tavily_search],
     system_prompt="You are a web search assistant. Search for events and return relevant information.",
 )
@@ -166,7 +166,7 @@ search_agent = create_agent(
 # ========== Supervisor Agent ==========
 # The supervisor uses the sub-agents as tools!
 # According to LangChain docs, agents must be wrapped in @tool functions
-supervisor_model = init_chat_model("gpt-4o-mini", temperature=0)
+# Uses the model from models.py
 checkpointer = MemorySaver()
 
 # Store subagent results and interrupt info for the middleware to access
@@ -268,7 +268,7 @@ class SubagentInterruptMiddleware(AgentMiddleware):
 
 
 supervisor_agent = create_agent(
-    model=supervisor_model,
+    model=model,
     tools=[call_calendar_agent, call_search_agent],  # Wrapped sub-agents as tools!
     system_prompt="""You are a supervisor assistant that coordinates between different sub-agents:
 - calendar_agent: Handles calendar operations (read, create events)
@@ -279,82 +279,82 @@ When a user wants to find an event and schedule it:
 2. Then use calendar_agent to check availability and schedule if free
 
 Coordinate between the agents to fulfill the user's request.""",
-    checkpointer=checkpointer,
+    # checkpointer=checkpointer,
     middleware=[SubagentInterruptMiddleware()],
 )
 
 
-if __name__ == "__main__":
-    # Example usage
-    print("=== Supervisor Multi-Agent Architecture ===\n")
+# if __name__ == "__main__":
+#     # Example usage
+#     print("=== Supervisor Multi-Agent Architecture ===\n")
 
-    # Note: Calendar already has an event tomorrow at 7 PM
-    print(f"Calendar already has an event: Team Meeting on {tomorrow_date} at 7 PM\n")
+#     # Note: Calendar already has an event tomorrow at 7 PM
+#     print(f"Calendar already has an event: Team Meeting on {tomorrow_date} at 7 PM\n")
 
-    supervisor_thread_id = "conversation-1"
-    supervisor_config = {"configurable": {"thread_id": supervisor_thread_id}}
+#     supervisor_thread_id = "conversation-1"
+#     supervisor_config = {"configurable": {"thread_id": supervisor_thread_id}}
 
-    calendar_thread_id = "calendar-conversation-1"  # Match the thread_id used in call_calendar_agent
-    calendar_config = {"configurable": {"thread_id": calendar_thread_id}}
+#     calendar_thread_id = "calendar-conversation-1"  # Match the thread_id used in call_calendar_agent
+#     calendar_config = {"configurable": {"thread_id": calendar_thread_id}}
     
-    print("User: Look for a ballet for tomorrow night and schedule it in my calendar")
-    print("(The supervisor will coordinate between search_agent and calendar_agent)\n")
+#     print("User: Look for a ballet for tomorrow night and schedule it in my calendar")
+#     print("(The supervisor will coordinate between search_agent and calendar_agent)\n")
 
-    # First invocation - supervisor coordinates, calendar agent may hit conflict
-    result = supervisor_agent.invoke({
-        "messages": [{"role": "user", "content": "Look for a ballet for tomorrow night and schedule it in my calendar"}]
-    }, config=supervisor_config)
+#     # First invocation - supervisor coordinates, calendar agent may hit conflict
+#     result = supervisor_agent.invoke({
+#         "messages": [{"role": "user", "content": "Look for a ballet for tomorrow night and schedule it in my calendar"}]
+#     }, config=supervisor_config)
 
-    # Check if supervisor was interrupted (due to subagent interrupt surfacing)
-    if "__interrupt__" in result:
-        print("🔔 SUPERVISOR INTERRUPTED! Subagent interrupt was surfaced.\n")
-        interrupt_info = result["__interrupt__"][0]
-        print(f"Interrupt source: {interrupt_info.value.get('source', 'unknown')}")
-        print(f"Message: {interrupt_info.value.get('message', 'N/A')}")
-        print(f"Subagent interrupt data: {interrupt_info.value.get('subagent_interrupt', 'N/A')}\n")
+#     # Check if supervisor was interrupted (due to subagent interrupt surfacing)
+#     if "__interrupt__" in result:
+#         print("🔔 SUPERVISOR INTERRUPTED! Subagent interrupt was surfaced.\n")
+#         interrupt_info = result["__interrupt__"][0]
+#         print(f"Interrupt source: {interrupt_info.value.get('source', 'unknown')}")
+#         print(f"Message: {interrupt_info.value.get('message', 'N/A')}")
+#         print(f"Subagent interrupt data: {interrupt_info.value.get('subagent_interrupt', 'N/A')}\n")
 
-        print("User responds: 'Yes, reschedule the Team Meeting to 8 PM'\n")
+#         print("User responds: 'Yes, reschedule the Team Meeting to 8 PM'\n")
 
-        # Resume supervisor - middleware will handle resuming the subagent
-        result = supervisor_agent.invoke(
-            Command(resume="Yes, reschedule the Team Meeting to 8 PM"),
-            config=supervisor_config
-        )
+#         # Resume supervisor - middleware will handle resuming the subagent
+#         result = supervisor_agent.invoke(
+#             Command(resume="Yes, reschedule the Team Meeting to 8 PM"),
+#             config=supervisor_config
+#         )
 
-        # Check if interrupted again (for reschedule_calendar approval)
-        if "__interrupt__" in result:
-            print("🔔 SUPERVISOR INTERRUPTED AGAIN! (for reschedule_calendar approval)\n")
-            print("Interrupt details:", result["__interrupt__"][0].value, "\n")
+#         # Check if interrupted again (for reschedule_calendar approval)
+#         if "__interrupt__" in result:
+#             print("🔔 SUPERVISOR INTERRUPTED AGAIN! (for reschedule_calendar approval)\n")
+#             print("Interrupt details:", result["__interrupt__"][0].value, "\n")
 
-            print("User approves the reschedule operation.\n")
+#             print("User approves the reschedule operation.\n")
 
-            # Resume with approval
-            result = supervisor_agent.invoke(
-                Command(resume={"decisions": [{"type": "approve"}]}),
-                config=supervisor_config
-            )
+#             # Resume with approval
+#             result = supervisor_agent.invoke(
+#                 Command(resume={"decisions": [{"type": "approve"}]}),
+#                 config=supervisor_config
+#             )
 
-        print(f"✅ Supervisor Agent (final): {result['messages'][-1].content}\n")
-    else:
-        print(f"Supervisor Agent: {result['messages'][-1].content}\n")
-        print("(No interrupt occurred - agent may have found a free slot)\n")
+#         print(f"✅ Supervisor Agent (final): {result['messages'][-1].content}\n")
+#     else:
+#         print(f"Supervisor Agent: {result['messages'][-1].content}\n")
+#         print("(No interrupt occurred - agent may have found a free slot)\n")
     
-    print("\n=== Advanced: Interrupt Surfacing ===")
-    print("Note: The supervisor agent has SubagentInterruptMiddleware that:")
-    print("1. Detects when a subagent (calendar_agent) is interrupted")
-    print("2. Propagates the interrupt to the supervisor level")
-    print("3. Automatically resumes the subagent with the user's response")
-    print("4. Returns the final result to the supervisor")
-    print("\nThis allows the supervisor to handle subagent interrupts transparently!")
-    print("Sub-agents are used as tools by the supervisor.")
-    print("The calendar sub-agent has both ask_for_help and HumanInTheLoopMiddleware for conflict resolution.")
+#     print("\n=== Advanced: Interrupt Surfacing ===")
+#     print("Note: The supervisor agent has SubagentInterruptMiddleware that:")
+#     print("1. Detects when a subagent (calendar_agent) is interrupted")
+#     print("2. Propagates the interrupt to the supervisor level")
+#     print("3. Automatically resumes the subagent with the user's response")
+#     print("4. Returns the final result to the supervisor")
+#     print("\nThis allows the supervisor to handle subagent interrupts transparently!")
+#     print("Sub-agents are used as tools by the supervisor.")
+#     print("The calendar sub-agent has both ask_for_help and HumanInTheLoopMiddleware for conflict resolution.")
 
-    print("\n=== How Interrupt Surfacing Works ===")
-    print("When calendar_agent.invoke() returns {'__interrupt__': [...]}:")
-    print("1. call_calendar_agent tool returns '[SUBAGENT_INTERRUPT]' marker")
-    print("2. SubagentInterruptMiddleware.after_tools() detects this marker")
-    print("3. Middleware calls interrupt() to pause supervisor execution")
-    print("4. User provides input via Command(resume=...)")
-    print("5. Middleware resumes calendar_agent with the user input")
-    print("6. Supervisor continues with the subagent's completed result")
+#     print("\n=== How Interrupt Surfacing Works ===")
+#     print("When calendar_agent.invoke() returns {'__interrupt__': [...]}:")
+#     print("1. call_calendar_agent tool returns '[SUBAGENT_INTERRUPT]' marker")
+#     print("2. SubagentInterruptMiddleware.after_tools() detects this marker")
+#     print("3. Middleware calls interrupt() to pause supervisor execution")
+#     print("4. User provides input via Command(resume=...)")
+#     print("5. Middleware resumes calendar_agent with the user input")
+#     print("6. Supervisor continues with the subagent's completed result")
 

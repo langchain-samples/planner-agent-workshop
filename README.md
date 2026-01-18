@@ -9,7 +9,9 @@ This workshop consists of 12 progressive steps, each building upon the previous:
 ### Part 1: LangChain v1 Core Features (Steps 1-9)
 1. **agent_01_basic.py** - Basic calendar agent with tools
 2. **agent_02_memory.py** - Adds conversational memory with MemorySaver
+   - **Step 2.1** (Optional): LangSmith Thread View - Visualize and debug agent execution
 3. **agent_03_human_in_loop_interrupt.py** - Human-in-the-loop with interrupt pattern
+   - **Step 3.1** (Optional): LangSmith Studio - Visual testing and iteration
 4. **agent_04_middleware_tool_confirmation.py** - Prebuilt middleware for tool confirmation
 5. **agent_05_structured_output_mcp.py** - Structured output with MCP integration
 6. **agent_06_supervisor_multi_agent.py** - Supervisor pattern with sub-agents as tools
@@ -46,9 +48,17 @@ cp .env.example .env
 OPENAI_API_KEY=your_openai_api_key_here
 ANTHROPIC_API_KEY=your_anthropic_api_key_here
 TAVILY_API_KEY=your_tavily_api_key_here
+LANGSMITH_API_KEY=your_langsmith_api_key_here  # Optional: for LangSmith Thread View
 ```
 
+**Note**: For LangSmith Thread View (Step 2.1) and LangSmith Studio (Step 3.1), you'll need to:
+- Sign up at [smith.langchain.com](https://smith.langchain.com)
+- Create an API key in Settings → API Keys
+- Add `LANGSMITH_API_KEY` to your `.env` file
+
 ## Running the Agents
+
+### Option 1: Run Scripts Directly
 
 Each agent script can be run independently:
 
@@ -65,6 +75,22 @@ Or activate the virtual environment and run directly:
 source .venv/bin/activate  # On macOS/Linux
 python agents/agent_01_basic.py
 ```
+
+### Option 2: Use LangSmith Studio (Recommended)
+
+For interactive testing and debugging:
+
+1. Ensure `langgraph.json` exists in the project root
+2. Sign up to LangSmith if you haven't already
+3. Run: `uv run langgraph dev`
+4. Open the Studio interface in your browser
+5. Select an agent from the dropdown and test it interactively
+
+See Step 3.1 in the notebook for details.
+
+### Model Configuration
+
+All agents use a centralized model configuration in `agents/models.py`. By default, agents use `gpt-4o-mini`, but you can switch to other models (Anthropic Claude, GPT OSS 120B) by editing `agents/models.py`.
 
 ## Workshop Progression
 

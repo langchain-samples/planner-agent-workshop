@@ -6,7 +6,6 @@ Demonstrates short-term vs long-term memory distinction.
 """
 
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
 from langchain.tools import tool, ToolRuntime
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.store.memory import InMemoryStore
@@ -14,6 +13,7 @@ from dataclasses import dataclass
 from typing import Dict, Any
 from typing_extensions import TypedDict
 from dotenv import load_dotenv
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -62,12 +62,7 @@ def read_user_memory(runtime: ToolRuntime[Context]) -> str:
     if not user_data or not user_data.value:
         return f"No user information found for user {user_id}"
     
-    info = user_data.value
-    return f"""User Information:
-- Name: {info.get('name', 'Unknown')}
-- Preferences: {info.get('preferences', {})}
-- Timezone: {info.get('timezone', 'Unknown')}
-- Notes: {info.get('notes', 'None')}"""
+    return str(user_data.value)
 
 
 @tool
@@ -98,10 +93,8 @@ def update_user_memory(runtime: ToolRuntime[Context], key: str, value: Any) -> s
     return f"Successfully updated {key} for user {user_id}"
 
 
-# Initialize model
-model = init_chat_model("gpt-4o-mini", temperature=0)
-
 # Create stores
+# Uses the model from models.py
 checkpointer = MemorySaver()  # Short-term memory (conversation history)
 store = InMemoryStore()  # Long-term memory (user data across conversations)
 
@@ -126,57 +119,57 @@ agent = create_agent(
     model=model,
     tools=[read_calendar, write_calendar, read_user_memory, update_user_memory],
     system_prompt=SYSTEM_PROMPT,
-    checkpointer=checkpointer,  # Short-term memory
-    store=store,  # Long-term memory
+    # checkpointer=checkpointer,  # Short-term memory
+    # store=store,  # Long-term memory
     context_schema=Context,
 )
 
-if __name__ == "__main__":
-    # Example usage
-    print("=== Agent with Long-Term Memory ===\n")
+# if __name__ == "__main__":
+#     # Example usage
+#     print("=== Agent with Long-Term Memory ===\n")
     
-    # Initialize some user data
-    store.put(("users",), "user_123", {
-        "name": "John Doe",
-        "preferences": {"time_format": "12-hour", "reminder_style": "friendly"},
-        "timezone": "Asia/Seoul",
-        "notes": "Prefers morning meetings"
-    })
+#     # Initialize some user data
+#     store.put(("users",), "user_123", {
+#         "name": "Marco Perini",
+#         "preferences": {"time_format": "12-hour", "reminder_style": "friendly"},
+#         "timezone": "Europe/Paris",
+#         "notes": "Prefers morning meetings"
+#     })
     
-    # First conversation thread
-    thread_id_1 = "thread-1"
-    config_1 = {
-        "configurable": {
-            "thread_id": thread_id_1,
-        }
-    }
-    context_1 = Context(user_id="user_123")
+#     # First conversation thread
+#     thread_id_1 = "thread-1"
+#     config_1 = {
+#         "configurable": {
+#             "thread_id": thread_id_1,
+#         }
+#     }
+#     context_1 = Context(user_id="user_123")
     
-    result1 = agent.invoke({
-        "messages": [{"role": "user", "content": "What do you know about me?"}]
-    }, config=config_1, context=context_1)
+#     result1 = agent.invoke({
+#         "messages": [{"role": "user", "content": "What do you know about me? I'm 27 years old and italian, please update your memory to always reply in italian when talking to me."}]
+#     }, config=config_1, context=context_1)
     
-    print("Thread 1 - User: What do you know about me?")
-    print(f"Agent: {result1['messages'][-1].content}\n")
+#     print("Thread 1 - User: What do you know about me?")
+#     print(f"Agent: {result1['messages'][-1].content}\n")
     
-    # Second conversation thread (different thread, same user)
-    thread_id_2 = "thread-2"
-    config_2 = {
-        "configurable": {
-            "thread_id": thread_id_2,
-        }
-    }
-    context_2 = Context(user_id="user_123")
+#     # Second conversation thread (different thread, same user)
+#     thread_id_2 = "thread-2"
+#     config_2 = {
+#         "configurable": {
+#             "thread_id": thread_id_2,
+#         }
+#     }
+#     context_2 = Context(user_id="user_123")
     
-    result2 = agent.invoke({
-        "messages": [{"role": "user", "content": "Schedule a meeting tomorrow at 10 AM"}]
-    }, config=config_2, context=context_2)
+#     result2 = agent.invoke({
+#         "messages": [{"role": "user", "content": "Schedule a meeting tomorrow at 10 AM."}]
+#     }, config=config_2, context=context_2)
     
-    print("Thread 2 - User: Schedule a meeting tomorrow at 10 AM")
-    print(f"Agent: {result2['messages'][-1].content}\n")
+#     print("Thread 2 - User: Schedule a meeting tomorrow at 10 AM")
+#     print(f"Agent: {result2['messages'][-1].content}\n")
     
-    print("Note:")
-    print("- Short-term memory (checkpointer): Remembers conversation within a thread")
-    print("- Long-term memory (store): Remembers user data across all threads")
-    print("- The agent can personalize responses based on stored user preferences")
+#     print("Note:")
+#     print("- Short-term memory (checkpointer): Remembers conversation within a thread")
+#     print("- Long-term memory (store): Remembers user data across all threads")
+#     print("- The agent can personalize responses based on stored user preferences")
 

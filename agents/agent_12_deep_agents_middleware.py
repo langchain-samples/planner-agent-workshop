@@ -10,12 +10,12 @@ from deepagents.middleware.subagents import SubAgentMiddleware
 from deepagents.middleware.todos import TodoListMiddleware
 from langchain.agents.middleware.types import AgentMiddleware
 from langchain.agents.middleware.human_in_the_loop import HumanInTheLoopMiddleware
-from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langchain_core.messages import HumanMessage
 from langgraph.checkpoint.memory import MemorySaver
 from typing import List, Dict
 from dotenv import load_dotenv
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -68,7 +68,8 @@ class SecurityGuardrailMiddleware(AgentMiddleware):
     Blocks malicious or irrelevant requests."""
 
     def __init__(self):
-        self.model = init_chat_model("gpt-4o-mini", temperature=0)
+        from agents.models import model
+        self.model = model
         self.blocked_patterns = [
             "hack", "exploit", "bypass", "inject", "malicious",
             "weather", "stock", "news"  # Out of scope for calendar agent
@@ -124,8 +125,8 @@ class SecurityGuardrailMiddleware(AgentMiddleware):
         return None
 
 
-# Initialize model and checkpointer
-model = init_chat_model("gpt-4o-mini", temperature=0)
+# Initialize checkpointer
+# Uses the model from models.py
 checkpointer = MemorySaver()
 
 # System prompt
@@ -150,7 +151,7 @@ agent = create_deep_agent(
     model=model,
     tools=[read_calendar, write_calendar, delete_calendar_event],
     system_prompt=SYSTEM_PROMPT,
-    checkpointer=checkpointer,
+    # checkpointer=checkpointer,
     # Note: create_deep_agent automatically includes these middleware:
     # - TodoListMiddleware (for write_todos tool)
     # - FilesystemMiddleware (for ls, read_file, write_file, edit_file)

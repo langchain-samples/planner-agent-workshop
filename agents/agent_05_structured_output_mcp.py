@@ -5,7 +5,6 @@ Demonstrates MCP integration and structured output with ToolStrategy.
 """
 
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
 from langchain.agents.structured_output import ToolStrategy
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
@@ -15,6 +14,7 @@ from typing import List
 import os
 import asyncio
 from dotenv import load_dotenv
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -38,9 +38,6 @@ class EventList:
     """List of events returned from search."""
     events: List[EventInfo]
 
-
-# Initialize the model
-model = init_chat_model("gpt-4o-mini", temperature=0)
 
 # System prompt
 SYSTEM_PROMPT = """You are a helpful event search assistant. You can search for events, concerts, 
@@ -96,29 +93,29 @@ async def create_agent_with_mcp():
 
         yield agent
 
-async def run_agent_async():
-    """Run the agent asynchronously (required for MCP tools)."""
-    async with create_agent_with_mcp() as agent:
-        result = await agent.ainvoke({
-            "messages": [{"role": "user", "content": "Look for concerts in Seoul tomorrow night, dec 16th 2025"}]
-        })
-        return result
+# async def run_agent_async():
+#     """Run the agent asynchronously (required for MCP tools)."""
+#     async with create_agent_with_mcp() as agent:
+#         result = await agent.ainvoke({
+#             "messages": [{"role": "user", "content": "Look for concerts in Paris tomorrow night, dec 16th 2026"}]
+#         })
+#         return result
 
-if __name__ == "__main__":
-    # Example usage
-    print("=== Structured Output Agent with MCP ===\n")
+# if __name__ == "__main__":
+#     # Example usage
+#     print("=== Structured Output Agent with MCP ===\n")
 
-    # Run agent asynchronously (required for MCP tools)
-    result = asyncio.run(run_agent_async())
+#     # Run agent asynchronously (required for MCP tools)
+#     result = asyncio.run(run_agent_async())
 
-    print("User: Look for concerts in Seoul tomorrow night")
-    print(f"Agent Response Type: {type(result['messages'][-1].content)}")
-    print(f"Agent: {result['messages'][-1].content}\n")
+#     print("User: Look for concerts in Paris tomorrow night")
+#     print(f"Agent Response Type: {type(result['messages'][-1].content)}")
+#     print(f"Agent: {result['messages'][-1].content}\n")
 
-    # Check for structured response
-    if "structured_response" in result:
-        print(f"Structured Response: {result['structured_response']}\n")
+#     # Check for structured response
+#     if "structured_response" in result:
+#         print(f"Structured Response: {result['structured_response']}\n")
 
-    print("Note: The agent returns structured output (EventList) instead of plain text.")
-    print("Using Tavily MCP server for web search with persistent session.")
+#     print("Note: The agent returns structured output (EventList) instead of plain text.")
+#     print("Using Tavily MCP server for web search with persistent session.")
 

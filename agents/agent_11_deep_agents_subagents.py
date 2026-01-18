@@ -5,12 +5,12 @@ Shows how to define specialized subagents and use the task tool for delegation.
 """
 
 from deepagents import create_deep_agent
-from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 from typing import List, Dict, Literal
 from dotenv import load_dotenv
 import os
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -50,13 +50,13 @@ def web_search(query: str, max_results: int = 3) -> str:
     # Mock search results
     return f"""Search results for "{query}":
 
-1. Classical Concert at Seoul Arts Center - Dec 20, 2025 at 7 PM
+1. Classical Concert at Paris Arts Center - Dec 20, 2025 at 7 PM
    Korean Symphony Orchestra performing Beethoven's 9th Symphony
    Tickets available at artscouncil.kr
 
 2. Jazz Night at Blue Note - Dec 21, 2025 at 9 PM
    Live jazz featuring international artists
-   Reservations: bluenote-seoul.com
+   Reservations: bluenote-Paris.com
 
 3. K-Pop Festival - Dec 22, 2025 at 6 PM
    Outdoor festival with multiple performers
@@ -100,8 +100,8 @@ Return a summary of what was scheduled and any conflicts encountered.""",
     "model": "gpt-4o-mini",
 }
 
-# Initialize model and checkpointer
-model = init_chat_model("gpt-4o-mini", temperature=0)
+# Initialize checkpointer
+# Uses the model from models.py
 checkpointer = MemorySaver()
 
 # System prompt for the main agent
@@ -130,7 +130,7 @@ agent = create_deep_agent(
     model=model,
     tools=[read_calendar, write_calendar, web_search],  # Main agent's tools
     system_prompt=SYSTEM_PROMPT,
-    checkpointer=checkpointer,
+    # checkpointer=checkpointer,
     subagents=[research_subagent, calendar_specialist_subagent],  # Define specialized subagents
 )
 
@@ -152,11 +152,11 @@ if __name__ == "__main__":
     result = agent.invoke({
         "messages": [{
             "role": "user",
-            "content": "Find upcoming concerts in Seoul this month and schedule the classical concert in my calendar"
+            "content": "Find upcoming concerts in Paris this month and schedule the classical concert in my calendar"
         }]
     }, config=config)
 
-    print("User: Find upcoming concerts in Seoul this month and schedule the classical concert in my calendar\n")
+    print("User: Find upcoming concerts in Paris this month and schedule the classical concert in my calendar\n")
     print(f"Agent: {result['messages'][-1].content}\n")
 
     # Check if files were created by subagents
@@ -169,7 +169,7 @@ if __name__ == "__main__":
     print("=== How Subagents Work ===")
     print()
     print("The main agent uses the 'task' tool to delegate work:")
-    print("  task(name='research-specialist', task='Find concerts in Seoul')")
+    print("  task(name='research-specialist', task='Find concerts in Paris')")
     print()
     print("Benefits of subagents:")
     print("1. 🧹 Context isolation - Subagent work doesn't clutter main agent's context")

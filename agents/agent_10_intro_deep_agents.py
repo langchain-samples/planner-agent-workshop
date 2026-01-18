@@ -5,11 +5,11 @@ Deep agents come with built-in capabilities: planning (todos), file system tools
 """
 
 from deepagents import create_deep_agent
-from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 from typing import List, Dict
 from dotenv import load_dotenv
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -69,10 +69,8 @@ def write_calendar(title: str, date: str, time: str, location: str = "") -> str:
     return f"Successfully created event '{title}' on {date} at {time} in {location}"
 
 
-# Initialize the model
-model = init_chat_model("gpt-4o-mini", temperature=0)
-
 # Create checkpointer for conversation memory
+# Uses the model from models.py
 checkpointer = MemorySaver()
 
 # System prompt - deep agents benefit from detailed instructions
@@ -101,7 +99,7 @@ agent = create_deep_agent(
     model=model,
     tools=[read_calendar, write_calendar],
     system_prompt=SYSTEM_PROMPT,
-    checkpointer=checkpointer,  # Add memory just like regular agents
+    # checkpointer=checkpointer,  # Add memory just like regular agents
 )
 
 if __name__ == "__main__":

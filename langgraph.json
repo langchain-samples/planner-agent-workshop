@@ -1,7 +1,15 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "agent": "./agents/agent_09_long_term_memory.py:agent"
+    "agent_01_basic": "./agents/agent_01_basic.py:agent",
+    "agent_02_memory": "./agents/agent_02_memory.py:agent",
+    "agent_03_human_in_loop_interrupt": "./agents/agent_03_human_in_loop_interrupt.py:agent",
+    "agent_04_middleware_tool_confirmation": "./agents/agent_04_middleware_tool_confirmation.py:agent",
+    "agent_05_structured_output_mcp": "./agents/agent_05_structured_output_mcp.py:create_agent_with_mcp",
+    "agent_06_supervisor_multi_agent": "./agents/agent_06_supervisor_multi_agent.py:supervisor_agent",
+    "agent_07_guardrail_middleware": "./agents/agent_07_guardrail_middleware.py:agent",
+    "agent_08_image_handling": "./agents/agent_08_image_handling.py:agent",
+    "agent_09_long_term_memory": "./agents/agent_09_long_term_memory.py:agent"
   },
   "env": ".env"
 }

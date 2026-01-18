@@ -5,11 +5,11 @@ Demonstrates thread_id for conversation continuity.
 """
 
 from langchain.agents import create_agent
-from langchain.chat_models import init_chat_model
 from langchain.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 from typing import List, Dict
 from dotenv import load_dotenv
+from agents.models import model
 
 load_dotenv(override=True)
 
@@ -69,9 +69,6 @@ def write_calendar(title: str, date: str, time: str, location: str = "") -> str:
     return f"Successfully created event '{title}' on {date} at {time} in {location}"
 
 
-# Initialize the model
-model = init_chat_model("gpt-4o-mini", temperature=0)
-
 # System prompt
 SYSTEM_PROMPT = """You are a helpful calendar assistant. You can:
 - Read calendar events using read_calendar
@@ -88,28 +85,28 @@ agent = create_agent(
     model=model,
     tools=[read_calendar, write_calendar],
     system_prompt=SYSTEM_PROMPT,
-    checkpointer=checkpointer,
+    # checkpointer=checkpointer,
 )
 
-if __name__ == "__main__":
-    # Example usage with thread_id for conversation continuity
-    print("=== Agent with Memory ===\n")
+# if __name__ == "__main__":
+#     # Example usage with thread_id for conversation continuity
+#     print("=== Agent with Memory ===\n")
     
-    thread_id = "conversation-1"
-    config = {"configurable": {"thread_id": thread_id}}
+#     thread_id = "conversation-1"
+#     config = {"configurable": {"thread_id": thread_id}}
     
-    # Schedule an event
-    result = agent.invoke({
-        "messages": [{"role": "user", "content": "Schedule a soccer game for December 20th at 11 AM in Seoul"}]
-    }, config=config)
-    print("User: Schedule a soccer game for December 20th at 11 AM in Seoul")
-    print(f"Agent: {result['messages'][-1].content}\n")
+#     # Schedule an event
+#     result = agent.invoke({
+#         "messages": [{"role": "user", "content": "Schedule a soccer game for December 20th at 11 AM in Paris"}]
+#     }, config=config)
+#     print("User: Schedule a soccer game for December 20th at 11 AM in Paris")
+#     print(f"Agent: {result['messages'][-1].content}\n")
     
-    # Ask what it just did (now it remembers!)
-    result2 = agent.invoke({
-        "messages": [{"role": "user", "content": "What did you just do?"}]
-    }, config=config)
-    print("User: What did you just do?")
-    print(f"Agent: {result2['messages'][-1].content}\n")
-    print("Note: The agent now remembers previous interactions thanks to MemorySaver!")
+#     # Ask what it just did (now it remembers!)
+#     result2 = agent.invoke({
+#         "messages": [{"role": "user", "content": "What did you just do?"}]
+#     }, config=config)
+#     print("User: What did you just do?")
+#     print(f"Agent: {result2['messages'][-1].content}\n")
+#     print("Note: The agent now remembers previous interactions thanks to MemorySaver!")
 
