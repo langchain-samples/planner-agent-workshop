@@ -9,7 +9,6 @@ from langchain.tools import tool
 from langgraph.checkpoint.memory import MemorySaver
 from typing import List, Dict, Literal
 from dotenv import load_dotenv
-import os
 from agents.models import model
 
 load_dotenv(override=True)
@@ -80,7 +79,8 @@ Your job is to:
 IMPORTANT: Keep your final response under 300 words to maintain clean context.
 Use the file system to store detailed research, then return only the summary.""",
     "tools": [web_search],
-    "model": "gpt-4o-mini",  # Can specify different model per subagent
+    # Uses the model from models.py (can specify different model per subagent if needed)
+    "model": model,
 }
 
 calendar_specialist_subagent = {
@@ -97,7 +97,8 @@ Your job is to:
 
 Return a summary of what was scheduled and any conflicts encountered.""",
     "tools": [read_calendar, write_calendar],
-    "model": "gpt-4o-mini",
+    # Uses the model from models.py
+    "model": model,
 }
 
 # Initialize checkpointer

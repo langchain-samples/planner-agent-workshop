@@ -7,7 +7,7 @@ Shows integration of security guardrails and tool confirmation with deep agents.
 from deepagents import create_deep_agent
 from deepagents.middleware.filesystem import FilesystemMiddleware
 from deepagents.middleware.subagents import SubAgentMiddleware
-from deepagents.middleware.todos import TodoListMiddleware
+from langchain.agents.middleware import TodoListMiddleware
 from langchain.agents.middleware.types import AgentMiddleware
 from langchain.agents.middleware.human_in_the_loop import HumanInTheLoopMiddleware
 from langchain.tools import tool
@@ -106,11 +106,29 @@ class SecurityGuardrailMiddleware(AgentMiddleware):
         # Simple heuristic: check if it's calendar-related
         calendar_keywords = ["schedule", "calendar", "meeting", "event", "appointment", "book", "reserve"]
         if not any(keyword in user_message_lower for keyword in calendar_keywords):
-            # Ask the model to analyze
-            analysis = self.model.invoke([
-                {"role": "system", "content": "You are a security analyzer. Determine if the following request is appropriate for a calendar assistant. Reply with 'ALLOW' or 'BLOCK: reason'."},
-                {"role": "user", "content": user_message}
-            ])
+            # Ask the model to analyze (run in thread pool to avoid blocking event loop)
+            import asyncio
+            from concurrent.futures import ThreadPoolExecutor
+            
+            try:
+                # Check if we're in an async context (ASGI server)
+                loop = asyncio.get_running_loop()
+                # We're in an async context, run blocking call in thread pool
+                with ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        self.model.invoke,
+                        [
+                            {"role": "system", "content": "You are a security analyzer. Determine if the following request is appropriate for a calendar assistant. Reply with 'ALLOW' or 'BLOCK: reason'."},
+                            {"role": "user", "content": user_message}
+                        ]
+                    )
+                    analysis = future.result()
+            except RuntimeError:
+                # No running event loop, use synchronous invoke directly
+                analysis = self.model.invoke([
+                    {"role": "system", "content": "You are a security analyzer. Determine if the following request is appropriate for a calendar assistant. Reply with 'ALLOW' or 'BLOCK: reason'."},
+                    {"role": "user", "content": user_message}
+                ])
 
             if analysis.content.startswith("BLOCK"):
                 return {

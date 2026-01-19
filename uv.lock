@@ -490,6 +490,25 @@ wheels = [
 ]
 
 [[package]]
+name = "deepagents-cli"
+version = "0.0.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "langchain" },
+    { name = "langchain-anthropic" },
+    { name = "langchain-core" },
+    { name = "python-dotenv" },
+    { name = "requests" },
+    { name = "rich" },
+    { name = "tavily-python" },
+    { name = "wcmatch" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/77/b3/85136f03dfe041fab07d614796adc929b34fba3c436b31a7b79096e0fdcb/deepagents_cli-0.0.3.tar.gz", hash = "sha256:10fce8923d36ea1a0101f9f8573fafbdc32030fc81b77cb70bb9b821ed1dc5e6", size = 54085 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/1b/b93bb5cb4a53e69dfdf75353143aa1415d0e278757ddbf6b5c2ff5b93a35/deepagents_cli-0.0.3-py3-none-any.whl", hash = "sha256:26462a1f2e8c9ccb2083fae95701299fe7d5aabaf56735d0804875038633e82c", size = 54747 },
+]
+
+[[package]]
 name = "defusedxml"
 version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -2816,6 +2835,20 @@ wheels = [
 ]
 
 [[package]]
+name = "tavily-python"
+version = "0.7.19"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "httpx" },
+    { name = "requests" },
+    { name = "tiktoken" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/bd/e1/21639fc5904d52d66f217e3031cd28d1e2227fd3f3f0b7fb51582d2f6d26/tavily_python-0.7.19.tar.gz", hash = "sha256:b5c195f58f8df0886814e50e641ba10ef8e5ec72be1e884b8f4b3b99c49934cf", size = 21458 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/73/51/d6056841a4b440ba0a1703a9aff3a87b8be57c6bb5c42c6615696f01a890/tavily_python-0.7.19-py3-none-any.whl", hash = "sha256:b3d95041f22c5dff37255f65308379e4f8ccef8fe0d92b860815812b570f5ef2", size = 18340 },
+]
+
+[[package]]
 name = "tenacity"
 version = "9.1.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3212,6 +3245,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "deepagents" },
+    { name = "deepagents-cli" },
     { name = "ipykernel" },
     { name = "jupyter" },
     { name = "langchain" },
@@ -3228,6 +3262,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "deepagents", specifier = ">=0.3.0" },
+    { name = "deepagents-cli", specifier = ">=0.0.3" },
     { name = "ipykernel", specifier = ">=7.1.0" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "langchain", specifier = ">=1.0.0" },
