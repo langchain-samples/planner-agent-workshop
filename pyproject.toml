@@ -21,8 +21,8 @@ dependencies = [
     "langsmith-fetch>=0.3.1",
     "ipykernel>=7.1.0",
     "jupyter>=1.1.1",
-    "deepagents>=0.3.0",
-    "pyppeteer>=2.0.0",
+    "deepagents>=0.4.0",
     "deepagents-cli>=0.0.3",
+    "pyppeteer>=0.0.25",
 ]
 
